@@ -1,6 +1,2 @@
 # Labs-DNS
 
-
-
-test
-
