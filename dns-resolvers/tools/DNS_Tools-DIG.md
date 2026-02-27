@@ -41,7 +41,7 @@ During this practice we are going to access the following equipment:
 
 
 
-# DNS queries and debugging using DIG tool
+# DNS queries and debugging using Domain Information Groper (DIG) tool
 
-We use the container "*cli" (recursive server) [**grpX-cli**].
+We use the container "*cli*" (recursive server) [**grpX-cli**].
 

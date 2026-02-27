@@ -6,7 +6,6 @@ DNS Related LABs
 * [DNS Resolver Lab (BIND)](https://github.com/65007/Labs--DNS/blob/main/dns-resolvers/DNS-Resolver_Lab_script_BIND.md)
 * [DNS Resolver Lab (Unbound)](https://github.com/65007/Labs--DNS/blob/main/dns-resolvers/DNS-Resolver_Lab_script_UNBOUND.md)
 * [DNS Tools - DIG](https://github.com/65007/Labs--DNS/blob/main/dns-resolvers/tools/DNS_Tools-DIG.md)
-* DNS Tools - DIG
 * DNS Tools - EDE
 * DNS Tools - DNSviz
 * DNS Tools - Zonemaster
