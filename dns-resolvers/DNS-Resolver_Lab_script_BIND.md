@@ -187,6 +187,6 @@ server is up and running
 Lets now quickly test our new resolver:
 
 ```
-# dig @localhost com. SOA +noall +answer`
+# dig @localhost com. SOA +noall +answer
 ```
 
