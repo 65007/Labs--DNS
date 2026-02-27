@@ -55,7 +55,7 @@ $ sudo su -
 
 Bind9 normally uses at least three configuration files `named.conf`, `named.conf.local` and `named.conf.options`. You should find all of them located in `/etc/bind`.
 
-In its default state (after fresh install) bind will not answer queries.
+In its default state (after fresh install) Bind server should not answer queries.
 
 We go to the /etc/bind directory:
 
@@ -152,7 +152,7 @@ May 13 01:38:27 resolv1.grpX.<lab_domain>.te-labs.training named[849]: resolver 
 
  
 
-Alternatively we can check the status of Bind9 with the rndc tool
+Alternatively we can check the status of Bind9 with the *rndc* tool:
 
 ```
 # rndc status

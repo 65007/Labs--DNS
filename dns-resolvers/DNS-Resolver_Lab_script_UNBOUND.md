@@ -2,7 +2,8 @@
 
 ------
 
-> (2024-11-27) 
+> (2026-02-27) 
+> Nicolas Antoniello (@65007)
 
 ------
 
@@ -52,6 +53,10 @@ We switch to the root user:
 $ sudo su -
 ```
 
+Unbound normally uses at least configuration file `unbound.conf`. You should find it located in `/etc/unboud`.
+
+In its default state (after fresh install) Unbound resolver should not answer queries.
+
 We go to the /etc/unbound directory:
 
 ```
@@ -92,8 +97,33 @@ server:
         do-tcp: yes
         do-ip4: yes
         do-ip6: yes
+        
+remote-control:
+				control-enable: yes
 
 include: "/etc/unbound/unbound.conf.d/*.conf"
+```
+
+The purpose of *remote-control* section is to allow secure, command-line administration of a running Unbound instance. It enables tasks like `unbound-control reload`, `unbound-control flush`, or `unbound-control stats`. As it uses TLS encryption for security, we must run `unbound-control-setup` to generate the required server key, `server.pem`, `control.key`, and `control.pem` files. By default, it usually only allows connections from `localhost` (127.0.0.1).
+
+An example of further configuration parameters in the *unbound.conf* file may look like:
+(***This is an example; we're not adding this to the configuration at this point!***)
+
+```
+remote-control:
+    control-enable: yes
+    control-interface: 127.0.0.1
+    control-port: 8953
+    server-key-file: "/etc/unbound/unbound_server.key"
+    server-cert-file: "/etc/unbound/unbound_server.pem"
+    control-key-file: "/etc/unbound/unbound_control.key"
+    control-cert-file: "/etc/unbound/unbound_control.pem"
+```
+
+Now let's create necessary files for unbound-control:
+
+```
+# unbound-control-setup
 ```
 
 Once we finish editing the configuration file, we execute a command that allows us to quickly check if the configuration is semantically correct:
@@ -145,5 +175,31 @@ Oct 11 20:31:49 resolv2.grp1.lac.te-labs.training unbound[468]: [468:0] notice: 
 Oct 11 20:31:49 resolv2.grp1.lac.te-labs.training unbound[468]: [468:0] notice: init module 2: iterator
 Oct 11 20:31:49 resolv2.grp1.lac.te-labs.training unbound[468]: [468:0] info: start of service (unbound 1.9.4).
 Oct 11 20:31:49 resolv2.grp1.lac.te-labs.training systemd[1]: Started Unbound DNS server.
+```
+
+
+
+Alternatively we can check the status of Unbound using the *unbound-control* tool:
+
+```
+# unbound-control status
+```
+
+```
+version: 1.19.2
+verbosity: 1
+threads: 1
+modules: 3 [ subnetcache validator iterator ]
+uptime: 10 seconds
+options: reuseport control(ssl)
+unbound (pid 10445) is running...
+```
+
+
+
+Lets now quickly test our new resolver:
+
+```
+# dig @localhost com. SOA +noall +answer
 ```
 
