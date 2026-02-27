@@ -104,21 +104,34 @@ remote-control:
 include: "/etc/unbound/unbound.conf.d/*.conf"
 ```
 
-The purpose of *remote-control* section is to allow secure, command-line administration of a running Unbound instance. It enables tasks like `unbound-control reload`, `unbound-control flush`, or `unbound-control stats`. As it uses TLS encryption for security, we must run `unbound-control-setup` to generate the required server key, `server.pem`, `control.key`, and `control.pem` files. By default, it usually only allows connections from `localhost` (127.0.0.1).
+The *interface* statement tells the server which interfaces will be used by Unbound to listening to incoming queries while the *access-control* is the access-list telling the server who may send queries to this server (who may use this resolver).
 
-An example of further configuration parameters in the *unbound.conf* file may look like:
-(***This is an example; we're not adding this to the configuration at this point!***)
+> [!TIP]
+>
+> Even when the *interface* can be “any;” we would normally recommend that in real production scenarios one should always put the IP addresses of the interfaces that are going to be used to listening to DNS queries (IPv4 and IPv6). And discourage the use of “any”.
 
-```
-remote-control:
-    control-enable: yes
-    control-interface: 127.0.0.1
-    control-port: 8953
-    server-key-file: "/etc/unbound/unbound_server.key"
-    server-cert-file: "/etc/unbound/unbound_server.pem"
-    control-key-file: "/etc/unbound/unbound_control.key"
-    control-cert-file: "/etc/unbound/unbound_control.pem"
-```
+
+
+> [!NOTE]
+>
+> The purpose of *remote-control* section is to allow secure, command-line administration of a running Unbound instance. It enables tasks like `unbound-control reload`, `unbound-control flush`, or `unbound-control stats`. As it uses TLS encryption for security, we must run `unbound-control-setup` to generate the required server key, `server.pem`, `control.key`, and `control.pem` files. By default, it usually only allows connections from `localhost` (127.0.0.1).
+>
+> An example of further configuration parameters in the *unbound.conf* file may look like:
+> (***This is an example; we're not adding this to the configuration at this point!***)
+>
+> ```
+> remote-control:
+>     control-enable: yes
+>     control-interface: 127.0.0.1
+>     control-port: 8953
+>     server-key-file: "/etc/unbound/unbound_server.key"
+>     server-cert-file: "/etc/unbound/unbound_server.pem"
+>     control-key-file: "/etc/unbound/unbound_control.key"
+>     control-cert-file: "/etc/unbound/unbound_control.pem"
+> ```
+>
+
+
 
 Now let's create necessary files for unbound-control:
 

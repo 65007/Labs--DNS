@@ -105,6 +105,14 @@ options {
 };
 ```
 
+The *listen-on* statement tells the server which interfaces will be used by BIND to listening to incoming queries while the *allow-query* is the access-list telling the server who may send queries to this server (who may use this resolver).
+
+> [!TIP]
+>
+> Even when the listen-on can be “any;” we would normally recommend that in real production scenarios one should always put the IP addresses of the interfaces that are going to be used to listening to DNS queries (IPv4 and IPv6). And discourage the use of “any”.
+
+
+
 Once we finish editing the configuration file, we execute a command that allows us to quickly check if the configuration is semantically correct (if the command does not return anything, it means that it did not find errors in the configuration files):
 
 ```
