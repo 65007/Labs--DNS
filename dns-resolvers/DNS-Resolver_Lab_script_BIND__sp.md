@@ -11,15 +11,15 @@
 ```
   DEVICE NAME        IPv4 ADDRESS              IPv6 ADDRESS
 +--------------+-----------------------+-----------------------------+
-| grpX-resolv1 | 100.100.X.67 (eth0)   | fd3a:d409:X:64::67 (eth0)   |
+| grpX-resolv1 | 100.100.X.67 (eth0)   | fd89:59e0:X:64::67 (eth0)   |
 +--------------+-----------------------+-----------------------------+
-| grpX-resolv2 | 100.100.X.68 (eth0)   | fd3a:d409:X:64::68 (eth0)   |
+| grpX-resolv2 | 100.100.X.68 (eth0)   | fd89:59e0:X:64::68 (eth0)   |
 +--------------+-----------------------+-----------------------------+
-| grpX-rtr     | 100.64.1.X (eth0)     | fd3a:d409:X::1 (eth1)       |
-|              | 100.100.X.65 (eth2)   | fd3a:d409:X:64::1 (eth2)    |
-|              | 100.100.X.193 (eth4)  | fd3a:d409:X:192::1 (eth4)   |
-|              | 100.100.X.129 (eth3)  | fd3a:d409:X:128::1 (eth3)   |
-|              | 100.100.X.1 (eth1)    | fd3a:d409:0:1::X (eth0)     |
+| grpX-rtr     | 100.64.1.X (eth0)     | fd89:59e0:X::1 (eth1)       |
+|              | 100.100.X.65 (eth2)   | fd89:59e0:X:64::1 (eth2)    |
+|              | 100.100.X.193 (eth4)  | fd89:59e0:X:192::1 (eth4)   |
+|              | 100.100.X.129 (eth3)  | fd89:59e0:X:128::1 (eth3)   |
+|              | 100.100.X.1 (eth1)    | fd89:59e0:0:1::X (eth0)     |
 +--------------+-----------------------+-----------------------------+
 ```
 
@@ -39,77 +39,90 @@ Durante esta práctica vamos a utilizar solamente los siguientes equipos:
 
 Para esto vamos a utilizar el servidor "Resolv 1" (resolver) [**grpX-resolv1**].
 
-Este ya tiene pre instalado BIND9, sin ninguna configuración adicional más que la que viene por defecto con la instalación.
+En este laboratorio utilizamos Bind9, un software de código abierto desarrollado y mantenido por la organización sin ánimo de lucro Internet Systems Consortium (ISC). Si utiliza Bind9 con fines comerciales, le invitamos a contribuir.
 
-Utilizaremos el usuario root:
-
-```
-$ sudo su -
-```
-
-Vamos al directorio /etc/bind:
+Para instalar BIND9, utilizamos el siguiente comando:
 
 ```
-# cd /etc/bind
+$ sudo apt install -y bind9
+```
+
+Lo más probable es que el comando haya fallado. Esto se debe a que la resolución no funciona ya que aun no tenemos ninguno de los servidores recursivos funcionando. Por suerte, internet ofrece actualmente varios servidores de resolución públicos que podemos usar temporalmente.
+
+En nuestro caso utilizaremos el 9.9.9.9.
+
+Para ello renombramos el */etc/resolv.conf* como */etc/resolv.conf.orig* de forma de poder luego restaurarlo cuando tengamos el resolver operativo.
+
+```
+$ sudo mv /etc/resolv.conf /etc/resolv.conf.orig
+```
+
+Luego indicamos utilizar el 9.9.9.9 de forma provisoria:
+
+```
+$ echo "nameserver 9.9.9.9"|sudo tee /etc/resolv.conf
+```
+
+Y volvemos a intentar el comando para instalar BIND9:
+
+```
+$ sudo apt install -y bind9
+```
+
+Una vez instalado, debemos crear un usuario bind que será el que BIND9 utilizará para ejecutar:
+
+```
+$ sudo adduser sysadm bind
+```
+
+> [!TIP]
+>
+> Cierra y vuelve a abrir la ventana de la terminal. Los nuevos permisos de usuario solo se activan después de cerrar sesión y volver a iniciarla.
+
+
+
+Hora vamos a realizar la configuración propia de BIND9 , para ello vamos al directorio */etc/bind*:
+
+```
+$ cd /etc/bind
 ```
 
 En este punto debemos configurar algunas opciones de BIND9.
 Para ello editamos el archivo /etc/bind/named.conf.options:
 
 ```
-# nano named.conf.options
+$ sudo nano named.conf.options
 ```
 
-Ahora agregamos las opciones para indicar (al resolver) cuáles son las direcciones IP que podrán enviar consultas DNS y al mismo tiempo a qué direcciones IP escuchará nuestro servidor en el puerto 53 (en este caso ambos prefijos son idénticos). El archivo debe ser el siguiente:
+Ahora agregamos las opciones para indicar (al resolver) cuáles son las direcciones IP que podrán enviarle consultas DNS y al mismo tiempo en que direcciones IP (interfaces) escuchará nuestro servidor en el puerto 53. El archivo final debe ser similar al siguiente:
 
 ```
 options {
-	directory "/var/cache/bind";
-
-	// If there is a firewall between you and nameservers you want
-	// to talk to, you may need to fix the firewall to allow multiple
-	// ports to talk. See http://www.kb.cert.org/vuls/id/800113
-
-	// If your ISP provided one or more IP addresses for stable 
-	// nameservers, you probably want to use them as forwarders.  
-	// Uncomment the following block, and insert the addresses replacing 
-	// the all-0's placeholder.
-
-	// forwarders {
-	// 	0.0.0.0;
-	// };
-
-	//========================================================================
-	// If BIND logs error messages about the root key being expired,
-	// you will need to update your keys. See https://www.isc.org/bind-keys
-	//========================================================================
-	dnssec-validation auto;
-
-	listen-on port 53 { any; };																		<--- Add this
-	listen-on-v6 port 53 { any; };																<--- Add this
-	
-	allow-query { localhost; 100.100.0.0/16; fd3a:d409::/32; };		<--- Add this
-
-	recursion yes;																								<--- Add this
+        directory "/var/cache/bind";
+        dnssec-validation auto;
+        listen-on port 53 { any; };
+        listen-on-v6 port 53 { any; };
+        allow-query { localhost; 100.100.0.0/16; fd89:59e0::/32; };
+        recursion yes;
 };
 ```
 
 Una vez que terminamos de editar el archivo de configuración, ejecutamos un comando que nos permite comprobar rápidamente si la configuración es semánticamente correcta (si el comando no devuelve nada, significa que no encontró errores en los archivos de configuración):
 
 ```
-# named-checkconf
+$ named-checkconf
 ```
 
 Finalmente reiniciamos el servidor para que tome los cambios de configuración:
 
 ```
-# systemctl restart bind9
+$ sudo systemctl restart named
 ```
 
 Y comprobamos el estado del proceso bind9:
 
 ```
-# systemctl status bind9
+$ sudo systemctl status named
 ```
 
 Deberíamos obtener una salida similar a la siguiente:
@@ -141,6 +154,12 @@ May 13 01:38:27 resolv1.grpX.napco.te-labs.training named[849]: resolver priming
 
 
 
+Finalmente restauramos el archivo original */etc/resolv.conf* para que utilice los servidores recursivos que instalamos nosotros (recordemos que provisoriamente estábamos utilizando el 9.9.9.9):
+
+```
+$ sudo mv /etc/resolv.conf.orig /etc/resolv.conf
+```
+
 
 
 # Pruebas del servidor recursivo
@@ -148,7 +167,7 @@ May 13 01:38:27 resolv1.grpX.napco.te-labs.training named[849]: resolver priming
 
 
 ```
-# dig @localhost
+$ dig @localhost
 ```
 
 ```
@@ -218,7 +237,7 @@ a.root-servers.net.	518400	IN	AAAA	2001:503:ba3e::2:30
 
 
 ```
-# dig @localhost nic.mx
+$ dig nic.mx
 ```
 
 ```
@@ -259,7 +278,7 @@ nic.mx.			300	IN	A	200.94.180.61
 #### Probando DNSSEC
 
 ```
-# dig @localhost nic.br +dnssec +multi
+$ dig nic.br +dnssec +multi
 ```
 
 ```
@@ -294,7 +313,7 @@ nic.br.			86400 IN RRSIG A 13 2 86400 (
 #### Verificando los Resource Records asociados a DNSSEC
 
 ```
-# dig @localhost nic.br DNSKEY +dnssec +multi
+$ dig nic.br DNSKEY +dnssec +multi
 ```
 
 ```
@@ -330,7 +349,7 @@ nic.br.			86247 IN RRSIG DNSKEY 13 2 86400 (
 
 
 ```
-# dig @localhost nic.br DS +multi
+$ dig nic.br DS +multi
 ```
 
 ```
@@ -362,12 +381,14 @@ nic.br.			3370 IN	DS 47828 13 2 (
 
 #### Generando una excepcion para DNSSEC
 
+Una zona puede romperse debido a problemas con su configuración DNSSEC. En ese caso, los recursivos con validación DNSSEC pueden devolver respuestas DNS con estado SERVFAIL. Los usuarios detrás de dicha resolución recursiva se verán afectados por esos dominios. Si bien generalmente es responsabilidad del administrador del dominio solucionar el problema, el administrador de resolución recursiva puede tomar medidas para deshabilitar temporalmente la validación DNSSEC para dicho dominio que no esté funcionando en el nivel de validación.
+
 
 
 Primero realizamos una consulta por un dominio que tiene una firma inválida (sirve para realizar pruebas):
 
 ```
-# dig @localhost dnssec-failed.org
+$ dig dnssec-failed.org
 ```
 
 ```
@@ -395,7 +416,7 @@ Primero realizamos una consulta por un dominio que tiene una firma inválida (si
 En BIND debemos ingresar la excepción utilizando la herramienta de línea de comando "***rndc nta***"
 
 ```
-# rndc nta dnssec-failed.org
+$ sudo rndc nta dnssec-failed.org
 ```
 
 
@@ -403,7 +424,7 @@ En BIND debemos ingresar la excepción utilizando la herramienta de línea de co
 Podemos visualizar una lista de todos los NTA (excepciones) configurados
 
 ```
-# rndc nta -dump
+$ sudo rndc nta -dump
 ```
 
 
@@ -411,7 +432,7 @@ Podemos visualizar una lista de todos los NTA (excepciones) configurados
 Ahora volvemos a realizar la consulta, luego de ingresar la excepción:
 
 ```
-# dig @localhost dnssec-failed.org
+$ dig @localhost dnssec-failed.org
 ```
 
 ***¿Qué sucede?***
